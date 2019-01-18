@@ -1,49 +1,27 @@
-const request = require("request");
-const cheerio = require("cheerio");
+const express = require('express')
+const app = express()
+const port = 3000
 
-const express = require("express");
+const players = require('./modules/players')
 
-const app = express();
+app.use(express.json())
 
-app.use(express.json());
+app.get('/', (req, res) => {
+  players.getPlayers()
+  .then( players => res.send({ players }) )
+  .catch( error => res.json({ error }) )
+})
 
-request("https://globoesporte.globo.com/futebol/brasileirao-serie-a/", function(
-  err,
-  res,
-  body
-) {
-  if (err) {
-    console.log("Erro: ", err);
-  }
+app.get('/serie-a', (req, res) => {
+  players.getPlayers('A')
+  .then( players => res.send({ players }) )
+  .catch( error => res.json({ error }) )
+})
 
-  const players = [];
+app.get('/serie-b', (req, res) => {
+  players.getPlayers('B')
+  .then( players => res.send({ players }) )
+  .catch( error => res.json({ error }) )
+})
 
-  const $ = cheerio.load(body);
-
-  $(".ranking-item-wrapper").each(function() {
-    const player = $(this)
-      .find(".jogador .jogador-nome")
-      .text()
-      .trim();
-    const scores = $(this)
-      .find(".jogador .jogador-gols")
-      .text()
-      .trim();
-    const position = $(this)
-      .find(".jogador .jogador-posicao")
-      .text()
-      .trim();
-
-    const data = {
-      player,
-      scores,
-      position
-    };
-
-    players.push(data);
-  });
-
-  app.get("/", (req, res) => res.json({ players }));
-});
-
-app.listen(3000, () => console.log("servidor ligado :D"));
+app.listen(port, () => console.log(`Running at port ${3000}`))
